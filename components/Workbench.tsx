@@ -47,6 +47,7 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
   const [wizardStep, setWizardStep] = useState(1);
   const [wizardData, setWizardData] = useState({
     name: '',
+    projectNumber: '',
     desc: '',
     templateId: 'blank',
     dbType: 'mysql',
@@ -84,6 +85,7 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
     setWizardStep(1);
     setWizardData({
       name: '',
+      projectNumber: '',
       desc: '',
       templateId: 'blank',
       dbType: 'mysql',
@@ -109,6 +111,11 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
       setWizardStep(1); // Jump back to step 1 to show error
       return;
     }
+    if (!wizardData.projectNumber.trim()) {
+        alert(t.projectNumberPlaceholder);
+        setWizardStep(1);
+        return;
+    }
 
     setIsCreating(true);
 
@@ -120,10 +127,13 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
       const newProject = {
         id: projects.length + 100 + Date.now(),
         name: wizardData.name,
+        number: wizardData.projectNumber,
         desc: wizardData.desc || 'No description',
         status: 'Draft',
         lastEdited: 'Just now',
-        color: 'bg-nebula-500' // Default color for new projects
+        color: 'bg-nebula-500', // Default color for new projects
+        size: '0 MB',
+        created: new Date().toISOString().split('T')[0]
       };
       
       setProjects([newProject, ...projects]);
@@ -167,19 +177,32 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
                <p className="text-gray-500 dark:text-gray-400 text-sm">请输入项目的基本信息，这些信息将用于识别和管理您的项目。</p>
              </div>
 
-             <div>
-               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                 {t.projectName} <span className="text-red-500">*</span>
-               </label>
-               <input 
-                 type="text" 
-                 value={wizardData.name}
-                 onChange={(e) => setWizardData({...wizardData, name: e.target.value})}
-                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white"
-                 placeholder={t.namePlaceholder}
-                 autoFocus
-               />
-               <p className="text-xs text-gray-400 mt-1">建议使用简明扼要的名称</p>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    {t.projectName} <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={wizardData.name}
+                    onChange={(e) => setWizardData({...wizardData, name: e.target.value})}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white"
+                    placeholder={t.namePlaceholder}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    {t.projectNumber} <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={wizardData.projectNumber}
+                    onChange={(e) => setWizardData({...wizardData, projectNumber: e.target.value})}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white"
+                    placeholder={t.projectNumberPlaceholder}
+                  />
+                </div>
              </div>
 
              <div>
@@ -372,6 +395,10 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
                    <span className="font-medium text-gray-800 dark:text-white">{wizardData.name}</span>
                 </div>
                 <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
+                   <span className="text-gray-500 dark:text-gray-400">{t.projectNumber}</span>
+                   <span className="font-medium text-gray-800 dark:text-white">{wizardData.projectNumber}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
                    <span className="text-gray-500 dark:text-gray-400">{t.selectTemplate}</span>
                    <span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">
                       {selectedTpl && <selectedTpl.icon size={14} />}
@@ -457,7 +484,8 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
                         {project.status}
                       </span>
                     </div>
-                    <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 group-hover:text-nebula-600 dark:group-hover:text-nebula-400 transition-colors">{project.name}</h3>
+                    <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1 group-hover:text-nebula-600 dark:group-hover:text-nebula-400 transition-colors">{project.name}</h3>
+                    {project.number && <p className="text-xs text-gray-400 mb-2 font-mono">{project.number}</p>}
                     <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 h-10">{project.desc}</p>
                     <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700/50">
                         <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
@@ -714,7 +742,7 @@ const Workbench: React.FC<WorkbenchProps> = ({ lang, user }) => {
                       onClick={() => setWizardStep(prev => prev + 1)}
                       className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={
-                        (wizardStep === 1 && !wizardData.name) ||
+                        (wizardStep === 1 && (!wizardData.name || !wizardData.projectNumber)) ||
                         (wizardStep === 3 && (!wizardData.dbHost || !wizardData.dbPort || !wizardData.dbName || !wizardData.dbUser || !wizardData.dbPassword))
                       }
                     >
