@@ -25,3 +25,15 @@ export interface ChartData {
   name: string;
   value: number;
 }
+
+export interface Department {
+  id: string;
+  parentId?: string | null;
+  name: string;
+  code: string;
+  manager: string;
+  memberCount: number;
+  status: 'Active' | 'Inactive';
+  description: string;
+  children?: Department[];
+}

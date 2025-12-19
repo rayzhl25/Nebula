@@ -1,4 +1,5 @@
 import { User } from '../types';
+import { MOCK_DEPARTMENTS } from '../constants';
 
 export const login = async (username: string): Promise<User> => {
   return new Promise((resolve) => {
@@ -52,6 +53,43 @@ export const updateProject = async (id: number, data: any): Promise<boolean> => 
 
 export const copyProject = async (id: number): Promise<boolean> => {
   console.log(`Calling Backend API [POST /api/projects/${id}/copy]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 800);
+  });
+};
+
+// --- Department Service ---
+
+export const getDepartments = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_DEPARTMENTS]);
+    }, 600);
+  });
+};
+
+export const createDepartment = async (data: any): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/departments] with data:", data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const updateDepartment = async (id: string, data: any): Promise<boolean> => {
+  console.log(`Calling Backend API [PUT /api/departments/${id}] with data:`, data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const deleteDepartment = async (id: string): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/departments/${id}]`);
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);
