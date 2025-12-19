@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Workbench from './components/Workbench';
 import ProjectList from './components/ProjectList';
 import DepartmentList from './components/DepartmentList';
+import DeveloperList from './components/DeveloperList';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
 import { User, ThemeMode, Language, Tenant } from './types';
@@ -36,6 +37,8 @@ const App: React.FC = () => {
         return <ProjectList lang={lang} />;
       case 'departments':
         return <DepartmentList lang={lang} />;
+      case 'developers':
+        return <DeveloperList lang={lang} />;
       case 'image-editor':
         return <ImageEditor lang={lang} />;
       case 'video-generator':

@@ -37,3 +37,19 @@ export interface Department {
   description: string;
   children?: Department[];
 }
+
+export interface Developer {
+  id: string;
+  name: string;
+  phone: string;
+  position: string;
+  role: string;
+  departmentId: string;
+  gender: 'Male' | 'Female';
+  avatar: string;
+  birthday: string;
+  email: string;
+  status: 'Active' | 'Inactive';
+  joinDate: string;
+  remarks?: string;
+}
