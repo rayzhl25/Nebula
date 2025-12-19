@@ -60,6 +60,37 @@ export const copyProject = async (id: number): Promise<boolean> => {
   });
 };
 
+export const getProjectDeleteInfo = async (id: number): Promise<any> => {
+  console.log(`Calling Backend API [GET /api/projects/${id}/delete-info]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Mock dynamic data that would come from backend
+      resolve({
+        id,
+        size: '345.2 MB', 
+        stats: {
+            frontend: { pages: 28, components: 164 },
+            backend: { apis: 45, services: 9 },
+            database: { tables: 22, records: 15420 },
+            config: { envs: 7, files: 48 }
+        },
+        backups: { count: 3, size: '512 MB' },
+        logs: { count: 1250 }
+      });
+    }, 800);
+  });
+};
+
+export const deleteProject = async (id: number, options: any): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/projects/${id}] with params:`, options);
+  return new Promise((resolve) => {
+    // Simulate API delay
+    setTimeout(() => {
+      resolve(true);
+    }, 2000); // 2 seconds to match the progress bar animation roughly
+  });
+};
+
 // --- Organization Service ---
 
 export const getOrganizations = async (): Promise<any[]> => {

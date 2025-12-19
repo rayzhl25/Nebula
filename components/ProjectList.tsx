@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { MOCK_PROJECTS, LOCALE, MOCK_TEMPLATES } from '../constants';
 import { Language } from '../types';
-import { createProject, getProjectMembers, updateProject, copyProject, createTemplate } from '../services/mockService';
+import { createProject, getProjectMembers, updateProject, copyProject, createTemplate, getProjectDeleteInfo, deleteProject } from '../services/mockService';
 
 interface ProjectListProps {
   lang: Language;
@@ -109,6 +109,8 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState(0);
+  const [isLoadingDeleteInfo, setIsLoadingDeleteInfo] = useState(false);
+  const [deleteInfo, setDeleteInfo] = useState<any>(null);
   
   // Delete Selection State (Step 2)
   const [deleteSelection, setDeleteSelection] = useState({
@@ -136,7 +138,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDeleteClick = (project: any) => {
+  const handleDeleteClick = async (project: any) => {
     setProjectToDelete(project);
     setDeleteStep(1);
     setDeleteConfirmName('');
@@ -152,6 +154,18 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       logs: false
     });
     setDeleteWizardOpen(true);
+    
+    // Fetch delete info from backend
+    setIsLoadingDeleteInfo(true);
+    try {
+        const info = await getProjectDeleteInfo(project.id);
+        setDeleteInfo(info);
+    } catch (error) {
+        console.error("Failed to fetch delete info", error);
+        setDeleteInfo(null);
+    } finally {
+        setIsLoadingDeleteInfo(false);
+    }
   };
 
   const executeDelete = async () => {
@@ -171,13 +185,24 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
         });
      }, 200);
 
-     // Wait for completion
-     await new Promise(resolve => setTimeout(resolve, 2200));
-     
-     setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
-     setIsDeleting(false);
-     setDeleteWizardOpen(false);
-     setProjectToDelete(null);
+     try {
+         // Call backend interface with all collected parameters
+         await deleteProject(projectToDelete.id, {
+             deleteComponents: deleteSelection,
+             confirmProjectName: deleteConfirmName,
+             timestamp: new Date().toISOString()
+         });
+         
+         setProjects(prev => prev.filter(p => p.id !== projectToDelete.id));
+     } catch (error) {
+         console.error("Failed to delete project", error);
+         alert("Failed to delete project");
+     } finally {
+         clearInterval(interval);
+         setIsDeleting(false);
+         setDeleteWizardOpen(false);
+         setProjectToDelete(null);
+     }
   };
 
   const handleCopyClick = (project: any, e?: React.MouseEvent) => {
@@ -348,14 +373,16 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       return;
     }
     if (!wizardData.projectNumber.trim()) {
-        alert(t.projectNumberPlaceholder);
-        setWizardStep(1);
-        return;
+      alert(t.projectNumberPlaceholder);
+      setWizardStep(1);
+      return;
     }
 
     setIsCreating(true);
+
     try {
       await createProject(wizardData);
+      
       const newProject = {
         id: projects.length + 100 + Date.now(),
         name: wizardData.name,
@@ -367,11 +394,12 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
         size: '0 MB',
         created: new Date().toISOString().split('T')[0]
       };
+      
       setProjects([newProject, ...projects]);
       setIsWizardOpen(false);
     } catch (error) {
       console.error("Failed to create project:", error);
-      alert("Failed to create project. Please try again.");
+      alert("Failed to create project");
     } finally {
       setIsCreating(false);
     }
@@ -521,13 +549,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       case 2: // Template Selection
         return (
           <div className="space-y-8 animate-fade-in px-2 py-4">
-             {/* Header Section */}
              <div className="text-left md:text-left mb-6">
                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">{t.selectTemplateTitle}</h3>
                <p className="text-gray-500 dark:text-gray-400">{t.selectTemplateDesc}</p>
              </div>
-             
-             {/* Templates Grid */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {MOCK_TEMPLATES.map(tpl => (
                   <div 
@@ -539,7 +564,6 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                         : 'border-gray-200 dark:border-gray-700 hover:border-nebula-400 dark:hover:border-nebula-500 hover:shadow-lg hover:-translate-y-1 bg-white dark:bg-gray-800'
                     }`}
                   >
-                    {/* Icon Container */}
                     <div className={`w-16 h-16 rounded-2xl mb-6 flex items-center justify-center transition-colors ${
                        wizardData.templateId === tpl.id 
                        ? 'bg-nebula-600 text-white' 
@@ -547,20 +571,14 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                     }`}>
                       <tpl.icon size={32} />
                     </div>
-                    
-                    {/* Title */}
                     <h4 className={`font-bold text-lg mb-3 ${
                         wizardData.templateId === tpl.id ? 'text-nebula-700 dark:text-nebula-300' : 'text-gray-800 dark:text-white'
                     }`}>
                       {t[tpl.nameKey as keyof typeof t]}
                     </h4>
-                    
-                    {/* Description */}
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
                       {t[tpl.descKey as keyof typeof t]}
                     </p>
-                    
-                    {/* Selection Indicator (Optional visual cue) */}
                     {wizardData.templateId === tpl.id && (
                         <div className="absolute top-4 right-4 text-nebula-600 dark:text-nebula-400">
                             <Check size={20} className="bg-white dark:bg-gray-800 rounded-full p-0.5" />
@@ -574,12 +592,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       case 3: // Database Config
         return (
           <div className="space-y-8 animate-fade-in px-2 py-4">
-             {/* Content omitted for brevity, matches existing code */}
              <div className="mb-4">
                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{t.dbConfigTitle}</h3>
                <p className="text-gray-500 dark:text-gray-400 text-sm">{t.dbConfigDesc}</p>
              </div>
-             {/* ... same database inputs as before ... */}
              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                {dbTypes.map((type) => (
                  <div 
@@ -611,7 +627,6 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
         const selectedTpl = MOCK_TEMPLATES.find(t => t.id === wizardData.templateId);
         return (
           <div className="space-y-6 animate-fade-in px-2">
-             {/* Content omitted for brevity, matches existing code */}
              <div className="mb-4">
                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{t.step4}</h3>
                <p className="text-gray-500 dark:text-gray-400 text-sm">请核对以下信息，确认无误后点击创建。</p>
@@ -633,6 +648,25 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
   };
 
   const renderDeleteWizardContent = () => {
+      // Loading state
+      if (isLoadingDeleteInfo) {
+          return (
+              <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+                  <Loader2 className="animate-spin text-nebula-500 mb-4" size={40} />
+                  <p className="text-gray-500 dark:text-gray-400">{t.loading}</p>
+              </div>
+          );
+      }
+
+      // Ensure data exists before rendering steps (fallback if error)
+      const info = deleteInfo || { 
+          name: projectToDelete.name, 
+          number: projectToDelete.number, 
+          size: projectToDelete.size || 'Unknown',
+          stats: { frontend: {}, backend: {}, database: {}, config: {} },
+          backups: {}, logs: {}
+      };
+
       switch(deleteStep) {
           case 1:
               return (
@@ -678,7 +712,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                 </div>
                                 <div className="space-y-1">
                                     <span className="text-sm text-gray-500 dark:text-gray-400 font-medium block">{t.projectSize}</span>
-                                    <span className="text-base text-gray-800 dark:text-white">{projectToDelete.size || '128 MB'}</span>
+                                    <span className="text-base text-gray-800 dark:text-white">{info.size}</span>
                                 </div>
                           </div>
                       </div>
@@ -739,11 +773,11 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                </div>
                                <div className="flex items-center gap-8">
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">24</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.frontend?.pages || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statPages}</div>
                                    </div>
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">156</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.frontend?.components || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statComponents}</div>
                                    </div>
                                    <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
@@ -771,11 +805,11 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                </div>
                                <div className="flex items-center gap-8">
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">42</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.backend?.apis || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statApis}</div>
                                    </div>
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">8</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.backend?.services || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statServices}</div>
                                    </div>
                                    <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
@@ -803,11 +837,11 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                </div>
                                <div className="flex items-center gap-8">
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">18</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.database?.tables || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statTables}</div>
                                    </div>
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">12,458</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.database?.records || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statRecords}</div>
                                    </div>
                                    <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
@@ -835,11 +869,11 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                </div>
                                <div className="flex items-center gap-8">
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">6</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.config?.envs || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statEnvs}</div>
                                    </div>
                                    <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">45</div>
+                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.config?.files || 0}</div>
                                        <div className="text-xs text-gray-400">{t.statFiles}</div>
                                    </div>
                                    <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
@@ -871,7 +905,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                      className="w-5 h-5 mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 transition-colors" 
                                    />
                                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors">
-                                       {t.deleteBackups}
+                                       {t.deleteBackups} ({info.backups?.count || 0} backups, {info.backups?.size || '0 MB'})
                                    </span>
                                </label>
                                <label className="flex items-start gap-3 cursor-pointer group">
@@ -882,7 +916,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                      className="w-5 h-5 mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500 transition-colors" 
                                    />
                                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors">
-                                       {t.deleteLogs}
+                                       {t.deleteLogs} ({info.logs?.count || 0} entries)
                                    </span>
                                </label>
                            </div>
@@ -931,10 +965,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                               </div>
                               
                               {/* Components */}
-                              <SummaryRow label={t.delSummaryFrontend} isDelete={deleteSelection.frontend} details={t.delFrontendDetails} />
-                              <SummaryRow label={t.delSummaryBackend} isDelete={deleteSelection.backend} details={t.delBackendDetails} />
-                              <SummaryRow label={t.delSummaryDatabase} isDelete={deleteSelection.database} details={t.delDbDetails} />
-                              <SummaryRow label={t.delSummaryConfig} isDelete={deleteSelection.config} details={t.delConfigDetails} />
+                              <SummaryRow label={t.delSummaryFrontend} isDelete={deleteSelection.frontend} details={`(${info.stats.frontend?.pages} pages, ${info.stats.frontend?.components} components)`} />
+                              <SummaryRow label={t.delSummaryBackend} isDelete={deleteSelection.backend} details={`(${info.stats.backend?.apis} APIs)`} />
+                              <SummaryRow label={t.delSummaryDatabase} isDelete={deleteSelection.database} details={`(${info.stats.database?.tables} tables)`} />
+                              <SummaryRow label={t.delSummaryConfig} isDelete={deleteSelection.config} details={`(${info.stats.config?.files} files)`} />
                               
                               {/* Extra Options */}
                               <SummaryRow label={t.delSummaryBackups} isDelete={deleteSelection.backups} />
@@ -943,7 +977,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                               {/* Space Freed */}
                               <div className="flex justify-between items-center py-2.5 border-t border-gray-200 dark:border-gray-600 mt-2 pt-4 text-sm">
                                   <span className="text-gray-600 dark:text-gray-400 font-medium">{t.delSummarySpace}</span>
-                                  <span className="font-bold text-gray-800 dark:text-white">{projectToDelete.size}</span>
+                                  <span className="font-bold text-gray-800 dark:text-white">{info.size}</span>
                               </div>
                           </div>
                       </div>
@@ -1437,7 +1471,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
              <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900 flex-1">
                  <div className="max-w-3xl mx-auto">{renderDeleteWizardContent()}</div>
              </div>
-             {deleteStep < 4 && (
+             {deleteStep < 4 && !isLoadingDeleteInfo && (
                  <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex justify-between items-center flex-shrink-0">
                     <div>
                        {deleteStep > 1 && <button onClick={() => setDeleteStep(prev => prev - 1)} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium"><ArrowLeft size={16} /> {t.prev}</button>}
