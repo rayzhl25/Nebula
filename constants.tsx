@@ -1,3 +1,4 @@
+
 import { 
   LayoutDashboard, 
   FolderKanban, 
@@ -16,7 +17,10 @@ import {
   Database,
   Server,
   Terminal,
-  Cpu
+  Cpu,
+  Monitor,
+  ShoppingBag,
+  BarChart3
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -216,13 +220,38 @@ export const LOCALE = {
     perm_projects_create: '创建项目',
     perm_projects_edit: '编辑项目',
     perm_projects_delete: '删除项目',
+    perm_projects_import: '导入项目',
+    perm_projects_export: '导出项目',
+    perm_projects_copy: '复制项目',
+    perm_projects_view_key: '查看密钥',
+    perm_projects_publish: '发布模板',
+    perm_projects_push_git: '推送Git',
+    perm_templates_view: '查看模板',
+    perm_templates_edit: '编辑模板',
+    perm_templates_delete: '删除模板',
+    perm_templates_use: '使用模板',
+    perm_resources_view: '查看资源',
+    perm_resources_create: '创建资源',
+    perm_resources_edit: '编辑资源',
+    perm_resources_delete: '删除资源',
+    perm_resources_manage_groups: '管理分组',
+    perm_orgs_view: '查看组织',
+    perm_orgs_create: '创建组织',
+    perm_orgs_edit: '编辑组织',
+    perm_orgs_delete: '删除组织',
     perm_depts_view: '查看部门',
-    perm_depts_manage: '管理部门',
+    perm_depts_create: '创建部门',
+    perm_depts_edit: '编辑部门',
+    perm_depts_delete: '删除部门',
     perm_devs_view: '查看开发者',
-    perm_devs_manage: '管理开发者',
+    perm_devs_create: '创建开发者',
+    perm_devs_edit: '编辑开发者',
+    perm_devs_delete: '删除开发者',
     perm_roles_view: '查看角色',
-    perm_roles_manage: '管理角色',
-    perm_resources_use: '使用开发资源',
+    perm_roles_create: '创建角色',
+    perm_roles_edit: '编辑角色',
+    perm_roles_delete: '删除角色',
+    perm_downloads_view: '查看下载',
     selectAllPerms: '全选',
     deselectAllPerms: '取消全选',
     // Resource Management (New)
@@ -610,13 +639,38 @@ export const LOCALE = {
     perm_projects_create: 'Create Projects',
     perm_projects_edit: 'Edit Projects',
     perm_projects_delete: 'Delete Projects',
-    perm_depts_view: 'View Depts',
-    perm_depts_manage: 'Manage Depts',
+    perm_projects_import: 'Import Projects',
+    perm_projects_export: 'Export Projects',
+    perm_projects_copy: 'Copy Projects',
+    perm_projects_view_key: 'View Key',
+    perm_projects_publish: 'Publish Template',
+    perm_projects_push_git: 'Push to Git',
+    perm_templates_view: 'View Templates',
+    perm_templates_edit: 'Edit Templates',
+    perm_templates_delete: 'Delete Templates',
+    perm_templates_use: 'Use Templates',
+    perm_resources_view: 'View Resources',
+    perm_resources_create: 'Create Resources',
+    perm_resources_edit: 'Edit Resources',
+    perm_resources_delete: 'Delete Resources',
+    perm_resources_manage_groups: 'Manage Groups',
+    perm_orgs_view: 'View Organizations',
+    perm_orgs_create: 'Create Organizations',
+    perm_orgs_edit: 'Edit Organizations',
+    perm_orgs_delete: 'Delete Organizations',
+    perm_depts_view: 'View Departments',
+    perm_depts_create: 'Create Departments',
+    perm_depts_edit: 'Edit Departments',
+    perm_depts_delete: 'Delete Departments',
     perm_devs_view: 'View Developers',
-    perm_devs_manage: 'Manage Developers',
+    perm_devs_create: 'Create Developers',
+    perm_devs_edit: 'Edit Developers',
+    perm_devs_delete: 'Delete Developers',
     perm_roles_view: 'View Roles',
-    perm_roles_manage: 'Manage Roles',
-    perm_resources_use: 'Use Dev Resources',
+    perm_roles_create: 'Create Roles',
+    perm_roles_edit: 'Edit Roles',
+    perm_roles_delete: 'Delete Roles',
+    perm_downloads_view: 'View Downloads',
     selectAllPerms: 'Select All',
     deselectAllPerms: 'Deselect All',
     // Resource Management (New)
@@ -915,24 +969,67 @@ export const MOCK_DEVELOPERS = [
 ];
 
 export const MOCK_PERMISSIONS = [
-  { id: 'p1', module: 'Projects', action: 'view', labelKey: 'perm_projects_view' },
-  { id: 'p2', module: 'Projects', action: 'create', labelKey: 'perm_projects_create' },
-  { id: 'p3', module: 'Projects', action: 'edit', labelKey: 'perm_projects_edit' },
-  { id: 'p4', module: 'Projects', action: 'delete', labelKey: 'perm_projects_delete' },
-  { id: 'p5', module: 'Departments', action: 'view', labelKey: 'perm_depts_view' },
-  { id: 'p6', module: 'Departments', action: 'manage', labelKey: 'perm_depts_manage' },
-  { id: 'p7', module: 'Developers', action: 'view', labelKey: 'perm_devs_view' },
-  { id: 'p8', module: 'Developers', action: 'manage', labelKey: 'perm_devs_manage' },
-  { id: 'p9', module: 'Roles', action: 'view', labelKey: 'perm_roles_view' },
-  { id: 'p10', module: 'Roles', action: 'manage', labelKey: 'perm_roles_manage' },
-  { id: 'p11', module: 'Resources', action: 'use', labelKey: 'perm_resources_use' },
+  // Dashboard
+  { id: 'dashboard:view', module: 'Dashboard', action: 'view', labelKey: 'perm_dashboard_view' },
+  
+  // Projects
+  { id: 'projects:view', module: 'Projects', action: 'view', labelKey: 'perm_projects_view' },
+  { id: 'projects:create', module: 'Projects', action: 'create', labelKey: 'perm_projects_create' },
+  { id: 'projects:edit', module: 'Projects', action: 'edit', labelKey: 'perm_projects_edit' },
+  { id: 'projects:delete', module: 'Projects', action: 'delete', labelKey: 'perm_projects_delete' },
+  { id: 'projects:import', module: 'Projects', action: 'import', labelKey: 'perm_projects_import' },
+  { id: 'projects:export', module: 'Projects', action: 'export', labelKey: 'perm_projects_export' },
+  { id: 'projects:copy', module: 'Projects', action: 'copy', labelKey: 'perm_projects_copy' },
+  { id: 'projects:view_key', module: 'Projects', action: 'view_key', labelKey: 'perm_projects_view_key' },
+  { id: 'projects:publish', module: 'Projects', action: 'publish', labelKey: 'perm_projects_publish' },
+  { id: 'projects:push_git', module: 'Projects', action: 'push_git', labelKey: 'perm_projects_push_git' },
+
+  // Templates
+  { id: 'templates:view', module: 'Templates', action: 'view', labelKey: 'perm_templates_view' },
+  { id: 'templates:edit', module: 'Templates', action: 'edit', labelKey: 'perm_templates_edit' },
+  { id: 'templates:delete', module: 'Templates', action: 'delete', labelKey: 'perm_templates_delete' },
+  { id: 'templates:use', module: 'Templates', action: 'use', labelKey: 'perm_templates_use' },
+
+  // Organizations
+  { id: 'orgs:view', module: 'Organizations', action: 'view', labelKey: 'perm_orgs_view' },
+  { id: 'orgs:create', module: 'Organizations', action: 'create', labelKey: 'perm_orgs_create' },
+  { id: 'orgs:edit', module: 'Organizations', action: 'edit', labelKey: 'perm_orgs_edit' },
+  { id: 'orgs:delete', module: 'Organizations', action: 'delete', labelKey: 'perm_orgs_delete' },
+
+  // Departments
+  { id: 'depts:view', module: 'Departments', action: 'view', labelKey: 'perm_depts_view' },
+  { id: 'depts:create', module: 'Departments', action: 'create', labelKey: 'perm_depts_create' },
+  { id: 'depts:edit', module: 'Departments', action: 'edit', labelKey: 'perm_depts_edit' },
+  { id: 'depts:delete', module: 'Departments', action: 'delete', labelKey: 'perm_depts_delete' },
+
+  // Developers
+  { id: 'devs:view', module: 'Developers', action: 'view', labelKey: 'perm_devs_view' },
+  { id: 'devs:create', module: 'Developers', action: 'create', labelKey: 'perm_devs_create' },
+  { id: 'devs:edit', module: 'Developers', action: 'edit', labelKey: 'perm_devs_edit' },
+  { id: 'devs:delete', module: 'Developers', action: 'delete', labelKey: 'perm_devs_delete' },
+
+  // Roles
+  { id: 'roles:view', module: 'Roles', action: 'view', labelKey: 'perm_roles_view' },
+  { id: 'roles:create', module: 'Roles', action: 'create', labelKey: 'perm_roles_create' },
+  { id: 'roles:edit', module: 'Roles', action: 'edit', labelKey: 'perm_roles_edit' },
+  { id: 'roles:delete', module: 'Roles', action: 'delete', labelKey: 'perm_roles_delete' },
+
+  // Resources
+  { id: 'resources:view', module: 'Resources', action: 'view', labelKey: 'perm_resources_view' },
+  { id: 'resources:create', module: 'Resources', action: 'create', labelKey: 'perm_resources_create' },
+  { id: 'resources:edit', module: 'Resources', action: 'edit', labelKey: 'perm_resources_edit' },
+  { id: 'resources:delete', module: 'Resources', action: 'delete', labelKey: 'perm_resources_delete' },
+  { id: 'resources:manage_groups', module: 'Resources', action: 'manage_groups', labelKey: 'perm_resources_manage_groups' },
+
+  // Downloads
+  { id: 'downloads:view', module: 'Downloads', action: 'view', labelKey: 'perm_downloads_view' },
 ];
 
 export const MOCK_ROLES = [
-  { id: 'r1', name: 'Administrator', code: 'ADMIN', description: 'Full access to all modules', status: 'Active', permissionIds: ['p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11'], userCount: 2 },
-  { id: 'r2', name: 'Project Manager', code: 'PM', description: 'Manage projects and resources', status: 'Active', permissionIds: ['p1','p2','p3','p4','p5','p7','p11'], userCount: 5 },
-  { id: 'r3', name: 'Developer', code: 'DEV', description: 'Create and edit projects', status: 'Active', permissionIds: ['p1','p2','p3','p11'], userCount: 12 },
-  { id: 'r4', name: 'Viewer', code: 'VIEWER', description: 'Read-only access', status: 'Active', permissionIds: ['p1','p5','p7'], userCount: 8 },
+  { id: 'r1', name: 'Administrator', code: 'ADMIN', description: 'Full access to all modules', status: 'Active', permissionIds: MOCK_PERMISSIONS.map(p => p.id), userCount: 2 },
+  { id: 'r2', name: 'Project Manager', code: 'PM', description: 'Manage projects and resources', status: 'Active', permissionIds: ['projects:view', 'projects:create', 'projects:edit', 'projects:delete', 'resources:view', 'resources:create', 'resources:edit', 'templates:view', 'templates:use'], userCount: 5 },
+  { id: 'r3', name: 'Developer', code: 'DEV', description: 'Create and edit projects', status: 'Active', permissionIds: ['projects:view', 'projects:create', 'projects:edit', 'resources:view', 'resources:create', 'templates:view'], userCount: 12 },
+  { id: 'r4', name: 'Viewer', code: 'VIEWER', description: 'Read-only access', status: 'Active', permissionIds: ['dashboard:view', 'projects:view', 'templates:view', 'orgs:view', 'depts:view', 'devs:view', 'roles:view', 'resources:view', 'downloads:view'], userCount: 8 },
 ];
 
 export const MOCK_RESOURCES = [
@@ -990,48 +1087,81 @@ export const AVATAR_LIST = {
     'https://api.dicebear.com/7.x/avataaars/svg?seed=Ava',
     'https://api.dicebear.com/7.x/avataaars/svg?seed=Isla',
     'https://api.dicebear.com/7.x/avataaars/svg?seed=Mia',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Amelia',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Grace'
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Ella',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Grace',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Chloe',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Mila',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Layla',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Harper',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Aria',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Scarlett',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Victoria',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Madison'
   ],
   animals: [
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Bear',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Cat',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Dog',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Lion',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Tiger',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Panda',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Koala',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Fox',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Rabbit',
-    'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Monkey'
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Bear',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Cat',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Dog',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Lion',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=Tiger',
   ]
 };
 
+export const MOCK_TEMPLATES = [
+  { id: 'blank', icon: LayoutTemplate, nameKey: 'emptyTemplate', descKey: 'emptyTemplateDesc' },
+  { id: 'crm', icon: Users, nameKey: 'crmTemplate', descKey: 'crmTemplateDesc' },
+  { id: 'erp', icon: Building, nameKey: 'erpTemplate', descKey: 'erpTemplateDesc' },
+  { id: 'mes', icon: Cpu, nameKey: 'cmsTemplate', descKey: 'cmsTemplateDesc' },
+];
+
 export const TRAINING_VIDEOS = [
-  { id: 1, title: 'Nebula Platform Overview', duration: '5:20', url: '#' },
-  { id: 2, title: 'Building Your First App', duration: '12:45', url: '#' },
-  { id: 3, title: 'Database Configuration Guide', duration: '8:30', url: '#' },
-  { id: 4, title: 'Advanced Workflow Settings', duration: '6:15', url: '#' },
-  { id: 5, title: 'Deploying to Production', duration: '10:00', url: '#' },
+  { id: 'v1', title: 'Platform Quick Start', duration: '5:20', url: '#' },
+  { id: 'v2', title: 'Building Your First App', duration: '12:45', url: '#' },
+  { id: 'v3', title: 'Database & API Integration', duration: '8:30', url: '#' },
 ];
 
 export const HELP_LINKS = [
-  { id: 1, titleKey: 'productManual', url: '#' },
-  { id: 2, titleKey: 'productBlog', url: '#' },
-  { id: 3, titleKey: 'documentation', url: '#' },
-  { id: 4, titleKey: 'helpCenter', url: '#' },
-];
-
-export const MOCK_TEMPLATES = [
-  { id: 'blank', nameKey: 'emptyTemplate', descKey: 'emptyTemplateDesc', icon: LayoutTemplate },
-  { id: 'crm', nameKey: 'crmTemplate', descKey: 'crmTemplateDesc', icon: Users },
-  { id: 'erp', nameKey: 'erpTemplate', descKey: 'erpTemplateDesc', icon: Building },
-  { id: 'mes', nameKey: 'cmsTemplate', descKey: 'cmsTemplateDesc', icon: Box },
+  { id: 'h1', titleKey: 'productManual', url: '#' },
+  { id: 'h2', titleKey: 'productBlog', url: '#' },
 ];
 
 export const DOWNLOAD_RESOURCES = [
-  { id: 'd1', type: 'installer', icon: 'windows', titleKey: 'winEngine', descKey: 'winEngineDesc', url: '#', password: 'nebula-install' },
-  { id: 'd2', type: 'installer', icon: 'linux', titleKey: 'linuxEngine', descKey: 'linuxEngineDesc', url: '#', password: 'nebula-server' },
-  { id: 'd3', type: 'document', icon: 'book', titleKey: 'installGuide', descKey: 'installGuideDesc', url: '#' },
-  { id: 'd4', type: 'template', icon: 'code', titleKey: 'jeecgTemplate', descKey: 'jeecgTemplateDesc', url: '#', password: 'jeecg-nebula' },
+  { 
+    id: 'd1', 
+    type: 'installer', 
+    icon: 'windows', 
+    titleKey: 'winEngine', 
+    descKey: 'winEngineDesc', 
+    url: '#',
+    password: null 
+  },
+  { 
+    id: 'd2', 
+    type: 'installer', 
+    icon: 'linux', 
+    titleKey: 'linuxEngine', 
+    descKey: 'linuxEngineDesc', 
+    url: '#',
+    password: null 
+  },
+  { 
+    id: 'd3', 
+    type: 'document', 
+    icon: 'book', 
+    titleKey: 'installGuide', 
+    descKey: 'installGuideDesc', 
+    url: '#',
+    password: null 
+  },
+  { 
+    id: 'd4', 
+    type: 'template', 
+    icon: 'code', 
+    titleKey: 'jeecgTemplate', 
+    descKey: 'jeecgTemplateDesc', 
+    url: '#',
+    password: 'nebula-code-2024' 
+  },
 ];

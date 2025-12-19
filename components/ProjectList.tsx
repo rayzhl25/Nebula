@@ -734,6 +734,69 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                   </div>
               );
           case 2:
+              const componentList = [
+                  { 
+                      id: 'frontend', 
+                      icon: Monitor, 
+                      colorClass: {
+                          bg: 'bg-blue-50 dark:bg-blue-900/30',
+                          text: 'text-blue-600 dark:text-blue-400',
+                          borderHover: 'hover:border-blue-300 dark:hover:border-blue-700'
+                      },
+                      title: t.compFrontend, 
+                      desc: t.compFrontendDesc,
+                      stats: [
+                          { value: info.stats.frontend?.pages || 0, label: t.statPages },
+                          { value: info.stats.frontend?.components || 0, label: t.statComponents }
+                      ]
+                  },
+                  { 
+                      id: 'backend', 
+                      icon: Server, 
+                      colorClass: {
+                          bg: 'bg-cyan-50 dark:bg-cyan-900/30',
+                          text: 'text-cyan-600 dark:text-cyan-400',
+                          borderHover: 'hover:border-cyan-300 dark:hover:border-cyan-700'
+                      },
+                      title: t.compBackend, 
+                      desc: t.compBackendDesc,
+                      stats: [
+                          { value: info.stats.backend?.apis || 0, label: t.statApis },
+                          { value: info.stats.backend?.services || 0, label: t.statServices }
+                      ]
+                  },
+                  { 
+                      id: 'database', 
+                      icon: Database, 
+                      colorClass: {
+                          bg: 'bg-amber-50 dark:bg-amber-900/30',
+                          text: 'text-amber-600 dark:text-amber-400',
+                          borderHover: 'hover:border-amber-300 dark:hover:border-amber-700'
+                      },
+                      title: t.compDB, 
+                      desc: t.compDBDesc,
+                      stats: [
+                          { value: info.stats.database?.tables || 0, label: t.statTables },
+                          { value: info.stats.database?.records || 0, label: t.statRecords }
+                      ]
+                  },
+                  { 
+                      id: 'config', 
+                      icon: Settings, 
+                      colorClass: {
+                          bg: 'bg-purple-50 dark:bg-purple-900/30',
+                          text: 'text-purple-600 dark:text-purple-400',
+                          borderHover: 'hover:border-purple-300 dark:hover:border-purple-700'
+                      },
+                      title: t.compConfig, 
+                      desc: t.compConfigDesc,
+                      stats: [
+                          { value: info.stats.config?.envs || 0, label: t.statEnvs },
+                          { value: info.stats.config?.files || 0, label: t.statFiles }
+                      ]
+                  }
+              ];
+
               return (
                   <div className="space-y-6 animate-fade-in">
                        {/* Header */}
@@ -758,135 +821,38 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                            </span>
                        </div>
 
-                       {/* Components List */}
+                       {/* Components List - Refactored to map */}
                        <div className="space-y-3">
-                           {/* Frontend Card */}
-                           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-between group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-                               <div className="flex items-center gap-4">
-                                   <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                                       <Monitor size={24} />
+                           {componentList.map((comp) => (
+                               <div key={comp.id} className={`p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-between group ${comp.colorClass.borderHover} transition-all`}>
+                                   <div className="flex items-center gap-4">
+                                       <div className={`w-12 h-12 rounded-lg ${comp.colorClass.bg} ${comp.colorClass.text} flex items-center justify-center`}>
+                                           <comp.icon size={24} />
+                                       </div>
+                                       <div>
+                                           <h4 className="font-bold text-gray-800 dark:text-white">{comp.title}</h4>
+                                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{comp.desc}</p>
+                                       </div>
                                    </div>
-                                   <div>
-                                       <h4 className="font-bold text-gray-800 dark:text-white">{t.compFrontend}</h4>
-                                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.compFrontendDesc}</p>
-                                   </div>
-                               </div>
-                               <div className="flex items-center gap-8">
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.frontend?.pages || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statPages}</div>
-                                   </div>
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.frontend?.components || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statComponents}</div>
-                                   </div>
-                                   <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
-                                       <input 
-                                         type="checkbox" 
-                                         checked={deleteSelection.frontend} 
-                                         onChange={(e) => setDeleteSelection({...deleteSelection, frontend: e.target.checked})}
-                                         className="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-all"
-                                       />
-                                       <Check size={16} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                   </label>
-                               </div>
-                           </div>
-
-                           {/* Backend Card */}
-                           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-between group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-                               <div className="flex items-center gap-4">
-                                   <div className="w-12 h-12 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                                       <Server size={24} />
-                                   </div>
-                                   <div>
-                                       <h4 className="font-bold text-gray-800 dark:text-white">{t.compBackend}</h4>
-                                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.compBackendDesc}</p>
+                                   <div className="flex items-center gap-8">
+                                       {comp.stats.map((stat, idx) => (
+                                           <div key={idx} className="text-right hidden sm:block">
+                                               <div className="text-lg font-bold text-gray-800 dark:text-white">{stat.value}</div>
+                                               <div className="text-xs text-gray-400">{stat.label}</div>
+                                           </div>
+                                       ))}
+                                       <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
+                                           <input 
+                                             type="checkbox" 
+                                             checked={deleteSelection[comp.id as keyof typeof deleteSelection] as boolean} 
+                                             onChange={(e) => setDeleteSelection({...deleteSelection, [comp.id]: e.target.checked})}
+                                             className={`peer appearance-none w-6 h-6 border-2 border-gray-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-all`}
+                                           />
+                                           <Check size={16} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
+                                       </label>
                                    </div>
                                </div>
-                               <div className="flex items-center gap-8">
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.backend?.apis || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statApis}</div>
-                                   </div>
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.backend?.services || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statServices}</div>
-                                   </div>
-                                   <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
-                                       <input 
-                                         type="checkbox" 
-                                         checked={deleteSelection.backend} 
-                                         onChange={(e) => setDeleteSelection({...deleteSelection, backend: e.target.checked})}
-                                         className="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-all"
-                                       />
-                                       <Check size={16} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                   </label>
-                               </div>
-                           </div>
-
-                           {/* Database Card */}
-                           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-between group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-                               <div className="flex items-center gap-4">
-                                   <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                       <Database size={24} />
-                                   </div>
-                                   <div>
-                                       <h4 className="font-bold text-gray-800 dark:text-white">{t.compDB}</h4>
-                                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.compDBDesc}</p>
-                                   </div>
-                               </div>
-                               <div className="flex items-center gap-8">
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.database?.tables || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statTables}</div>
-                                   </div>
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.database?.records || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statRecords}</div>
-                                   </div>
-                                   <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
-                                       <input 
-                                         type="checkbox" 
-                                         checked={deleteSelection.database} 
-                                         onChange={(e) => setDeleteSelection({...deleteSelection, database: e.target.checked})}
-                                         className="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-all"
-                                       />
-                                       <Check size={16} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                   </label>
-                               </div>
-                           </div>
-
-                           {/* Config Card */}
-                           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-between group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-                               <div className="flex items-center gap-4">
-                                   <div className="w-12 h-12 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                                       <Settings size={24} />
-                                   </div>
-                                   <div>
-                                       <h4 className="font-bold text-gray-800 dark:text-white">{t.compConfig}</h4>
-                                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.compConfigDesc}</p>
-                                   </div>
-                               </div>
-                               <div className="flex items-center gap-8">
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.config?.envs || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statEnvs}</div>
-                                   </div>
-                                   <div className="text-right hidden sm:block">
-                                       <div className="text-lg font-bold text-gray-800 dark:text-white">{info.stats.config?.files || 0}</div>
-                                       <div className="text-xs text-gray-400">{t.statFiles}</div>
-                                   </div>
-                                   <label className="relative flex items-center justify-center w-6 h-6 cursor-pointer">
-                                       <input 
-                                         type="checkbox" 
-                                         checked={deleteSelection.config} 
-                                         onChange={(e) => setDeleteSelection({...deleteSelection, config: e.target.checked})}
-                                         className="peer appearance-none w-6 h-6 border-2 border-gray-300 rounded bg-white checked:bg-blue-600 checked:border-blue-600 transition-all"
-                                       />
-                                       <Check size={16} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
-                                   </label>
-                               </div>
-                           </div>
+                           ))}
                        </div>
 
                        {/* Danger Zone */}
@@ -1468,7 +1434,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                     </div>
                 </div>
              </div>
-             <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900 flex-1">
+             <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900 flex-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                  <div className="max-w-3xl mx-auto">{renderDeleteWizardContent()}</div>
              </div>
              {deleteStep < 4 && !isLoadingDeleteInfo && (
