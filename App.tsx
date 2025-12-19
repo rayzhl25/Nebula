@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Workbench from './components/Workbench';
+import ProjectList from './components/ProjectList';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
 import { User, ThemeMode, Language, Tenant } from './types';
@@ -30,6 +31,8 @@ const App: React.FC = () => {
     switch (activeMenu) {
       case 'dashboard':
         return <Workbench lang={lang} user={user!} />;
+      case 'projects':
+        return <ProjectList lang={lang} />;
       case 'image-editor':
         return <ImageEditor lang={lang} />;
       case 'video-generator':

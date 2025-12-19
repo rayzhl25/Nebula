@@ -12,3 +12,15 @@ export const login = async (username: string): Promise<User> => {
     }, 800);
   });
 };
+
+export const createProject = async (data: any): Promise<boolean> => {
+  // Simulate backend API call
+  console.log("Calling Backend API [POST /api/projects] with data:", data);
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Simulate successful creation
+      resolve(true);
+    }, 1500);
+  });
+};

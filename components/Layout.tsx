@@ -55,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({
             }
           }}
           className={`w-full flex items-center justify-between p-3 my-1 rounded-lg transition-colors ${
-            isActive ? 'bg-purple-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            isActive ? 'bg-nebula-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
           style={{ paddingLeft: `${depth * 1 + 0.75}rem` }}
         >
@@ -83,7 +83,7 @@ const Layout: React.FC<LayoutProps> = ({
         className={`${sidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 z-20`}
       >
         <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
-           <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">
+           <div className="w-8 h-8 bg-nebula-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-2">
              N
            </div>
            {sidebarOpen && <span className="font-bold text-lg text-gray-800 dark:text-white">Nebula</span>}
@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({
             {/* Tenant Switcher */}
             <div className="relative group">
                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-                 <span className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-xs text-white">{tenant.logo}</span>
+                 <span className="w-6 h-6 bg-nebula-500 rounded-full flex items-center justify-center text-xs text-white">{tenant.logo}</span>
                  {tenant.name}
                  <ChevronDown size={14} />
                </button>
@@ -117,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({
                        <button 
                         key={t.id}
                         onClick={() => setTenant(t)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-50 dark:hover:bg-purple-900 rounded-md"
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-nebula-50 dark:hover:bg-nebula-900/30 rounded-md"
                        >
                          {t.name}
                        </button>
@@ -138,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({
             {/* Theme */}
             <div className="flex bg-gray-100 dark:bg-gray-700 rounded-full p-1">
                <button onClick={() => setTheme('light')} className={`p-1.5 rounded-full ${theme === 'light' ? 'bg-white shadow text-yellow-500' : 'text-gray-500'}`}><Sun size={14} /></button>
-               <button onClick={() => setTheme('system')} className={`p-1.5 rounded-full ${theme === 'system' ? 'bg-white shadow text-blue-500' : 'text-gray-500'}`}><Monitor size={14} /></button>
+               <button onClick={() => setTheme('system')} className={`p-1.5 rounded-full ${theme === 'system' ? 'bg-white shadow text-nebula-500' : 'text-gray-500'}`}><Monitor size={14} /></button>
                <button onClick={() => setTheme('dark')} className={`p-1.5 rounded-full ${theme === 'dark' ? 'bg-white shadow text-purple-400' : 'text-gray-500'}`}><Moon size={14} /></button>
             </div>
 

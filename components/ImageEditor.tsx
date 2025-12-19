@@ -52,7 +52,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ lang }) => {
     <div className="h-[calc(100vh-8rem)] flex flex-col">
        <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-          <Wand2 className="text-purple-500" />
+          <Wand2 className="text-nebula-500" />
           {t.imageEditor}
         </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t.editorDescription}</p>
@@ -63,7 +63,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ lang }) => {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col gap-4 overflow-auto">
              <div 
                onClick={() => fileInputRef.current?.click()}
-               className={`flex-1 min-h-[300px] border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${image ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-purple-400'}`}
+               className={`flex-1 min-h-[300px] border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${image ? 'border-nebula-500 bg-nebula-50 dark:bg-nebula-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-nebula-400'}`}
              >
                {image ? (
                  <img src={image} alt="Original" className="max-h-full max-w-full object-contain rounded-md" />
@@ -88,12 +88,12 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ lang }) => {
                  value={prompt}
                  onChange={(e) => setPrompt(e.target.value)}
                  placeholder={t.promptPlaceholder}
-                 className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                 className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-nebula-500 outline-none"
                />
                <button 
                  onClick={handleGenerate}
                  disabled={!image || !prompt || loading}
-                 className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                 className="bg-nebula-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-nebula-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                >
                  {loading ? <Loader2 className="animate-spin" /> : <Wand2 size={20} />}
                  {t.generate}
@@ -106,7 +106,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ lang }) => {
              <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                {loading ? (
                  <div className="text-center">
-                    <Loader2 className="h-10 w-10 text-purple-500 animate-spin mx-auto mb-4" />
+                    <Loader2 className="h-10 w-10 text-nebula-500 animate-spin mx-auto mb-4" />
                     <p className="text-gray-500">{t.loading}</p>
                  </div>
                ) : resultImage ? (

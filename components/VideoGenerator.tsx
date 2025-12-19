@@ -97,7 +97,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ lang }) => {
     <div className="h-[calc(100vh-8rem)] flex flex-col">
        <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-          <VideoIcon className="text-red-500" />
+          <VideoIcon className="text-nebula-500" />
           {t.videoGenerator}
         </h2>
         <p className="text-gray-500 dark:text-gray-400 mt-1">{t.veoDescription}</p>
@@ -107,7 +107,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ lang }) => {
           <div className="w-full lg:w-1/3 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col gap-4">
              <div 
                onClick={() => fileInputRef.current?.click()}
-               className={`flex-1 min-h-[200px] border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${image ? 'border-red-500 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-red-400'}`}
+               className={`flex-1 min-h-[200px] border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${image ? 'border-nebula-500 bg-nebula-50 dark:bg-nebula-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-nebula-400'}`}
              >
                {image ? (
                  <img src={image} alt="Source" className="max-h-full max-w-full object-contain rounded-md" />
@@ -131,13 +131,13 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ lang }) => {
                value={prompt}
                onChange={(e) => setPrompt(e.target.value)}
                placeholder={t.videoPromptPlaceholder}
-               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-red-500 outline-none"
+               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-white focus:ring-2 focus:ring-nebula-500 outline-none"
              />
 
              <button 
                onClick={handleGenerate}
                disabled={!image || loading}
-               className="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+               className="w-full bg-nebula-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-nebula-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
              >
                {loading ? <Loader2 className="animate-spin" /> : <VideoIcon size={20} />}
                {t.generate} (Veo)
@@ -147,7 +147,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ lang }) => {
           <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center bg-black/5 dark:bg-black/20">
              {loading ? (
                 <div className="text-center">
-                   <Loader2 className="h-12 w-12 text-red-500 animate-spin mx-auto mb-4" />
+                   <Loader2 className="h-12 w-12 text-nebula-500 animate-spin mx-auto mb-4" />
                    <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">{t.loading}</p>
                    <p className="text-gray-400 text-sm mt-2">This may take a minute or two.</p>
                 </div>
