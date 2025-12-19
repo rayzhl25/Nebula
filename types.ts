@@ -53,3 +53,20 @@ export interface Developer {
   joinDate: string;
   remarks?: string;
 }
+
+export interface Permission {
+  id: string;
+  module: string; // e.g., 'Projects', 'System'
+  action: string; // e.g., 'read', 'write'
+  labelKey: string; // Translation key
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  status: 'Active' | 'Inactive';
+  permissionIds: string[];
+  userCount: number;
+}

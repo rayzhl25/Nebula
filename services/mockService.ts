@@ -1,5 +1,5 @@
 import { User } from '../types';
-import { MOCK_DEPARTMENTS, MOCK_DEVELOPERS } from '../constants';
+import { MOCK_DEPARTMENTS, MOCK_DEVELOPERS, MOCK_ROLES, MOCK_PERMISSIONS } from '../constants';
 
 export const login = async (username: string): Promise<User> => {
   return new Promise((resolve) => {
@@ -127,6 +127,51 @@ export const updateDeveloper = async (id: string, data: any): Promise<boolean> =
 
 export const deleteDeveloper = async (id: string): Promise<boolean> => {
   console.log(`Calling Backend API [DELETE /api/developers/${id}]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 800);
+  });
+};
+
+// --- Role Service ---
+
+export const getRoles = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_ROLES]);
+    }, 600);
+  });
+};
+
+export const getPermissions = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_PERMISSIONS]);
+    }, 400);
+  });
+};
+
+export const createRole = async (data: any): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/roles] with data:", data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const updateRole = async (id: string, data: any): Promise<boolean> => {
+  console.log(`Calling Backend API [PUT /api/roles/${id}] with data:`, data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const deleteRole = async (id: string): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/roles/${id}]`);
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);

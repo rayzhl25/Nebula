@@ -5,8 +5,10 @@ import Workbench from './components/Workbench';
 import ProjectList from './components/ProjectList';
 import DepartmentList from './components/DepartmentList';
 import DeveloperList from './components/DeveloperList';
+import RoleList from './components/RoleList';
 import ImageEditor from './components/ImageEditor';
 import VideoGenerator from './components/VideoGenerator';
+import ResourceDownloads from './components/ResourceDownloads';
 import { User, ThemeMode, Language, Tenant } from './types';
 import { MOCK_TENANTS, LOCALE } from './constants';
 
@@ -39,6 +41,10 @@ const App: React.FC = () => {
         return <DepartmentList lang={lang} />;
       case 'developers':
         return <DeveloperList lang={lang} />;
+      case 'roles':
+        return <RoleList lang={lang} />;
+      case 'downloads':
+        return <ResourceDownloads lang={lang} />;
       case 'image-editor':
         return <ImageEditor lang={lang} />;
       case 'video-generator':
