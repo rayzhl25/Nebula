@@ -358,7 +358,7 @@ const DepartmentList: React.FC<DepartmentListProps> = ({ lang }) => {
         // Simple Grid View (Flattened)
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
            {visibleDepartments.map(dept => (
-              <div key={dept.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-all group">
+              <div key={dept.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm hover:shadow-md transition-all group relative">
                  <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                        <Building2 size={20} />
@@ -367,13 +367,16 @@ const DepartmentList: React.FC<DepartmentListProps> = ({ lang }) => {
                        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                           <MoreVertical size={18} />
                        </button>
-                       <div className="absolute right-0 top-full mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hidden group-hover/menu:block z-10">
-                          <button onClick={() => openEditModal(dept)} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-                             <Edit size={14} /> {t.edit}
-                          </button>
-                          <button onClick={() => handleDeleteClick(dept)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-                             <Trash2 size={14} /> {t.delete}
-                          </button>
+                       {/* Safe hover bridge */}
+                       <div className="absolute right-0 top-full pt-2 w-32 hidden group-hover/menu:block z-20">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden py-1">
+                              <button onClick={() => openEditModal(dept)} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                 <Edit size={14} /> {t.edit}
+                              </button>
+                              <button onClick={() => handleDeleteClick(dept)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+                                 <Trash2 size={14} /> {t.delete}
+                              </button>
+                          </div>
                        </div>
                     </div>
                  </div>

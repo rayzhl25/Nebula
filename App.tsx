@@ -3,11 +3,12 @@ import Login from './components/Login';
 import Layout from './components/Layout';
 import Workbench from './components/Workbench';
 import ProjectList from './components/ProjectList';
+import TemplateList from './components/TemplateList';
 import DepartmentList from './components/DepartmentList';
 import DeveloperList from './components/DeveloperList';
 import RoleList from './components/RoleList';
-import ImageEditor from './components/ImageEditor';
-import VideoGenerator from './components/VideoGenerator';
+import OrganizationList from './components/OrganizationList';
+import ResourceList from './components/ResourceList';
 import ResourceDownloads from './components/ResourceDownloads';
 import { User, ThemeMode, Language, Tenant } from './types';
 import { MOCK_TENANTS, LOCALE } from './constants';
@@ -37,18 +38,20 @@ const App: React.FC = () => {
         return <Workbench lang={lang} user={user!} />;
       case 'projects':
         return <ProjectList lang={lang} />;
+      case 'templates':
+        return <TemplateList lang={lang} />;
+      case 'organizations':
+        return <OrganizationList lang={lang} />;
       case 'departments':
         return <DepartmentList lang={lang} />;
       case 'developers':
         return <DeveloperList lang={lang} />;
       case 'roles':
         return <RoleList lang={lang} />;
+      case 'resources':
+        return <ResourceList lang={lang} />;
       case 'downloads':
         return <ResourceDownloads lang={lang} />;
-      case 'image-editor':
-        return <ImageEditor lang={lang} />;
-      case 'video-generator':
-        return <VideoGenerator lang={lang} />;
       default:
         // Placeholder for other modules
         const t = LOCALE[lang];

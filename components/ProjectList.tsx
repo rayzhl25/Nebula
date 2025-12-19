@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Plus, 
   Search, 
@@ -32,11 +32,15 @@ import {
   Radiation,
   Monitor,
   Settings,
-  Skull
+  Skull,
+  Upload,
+  Download,
+  Key,
+  LayoutTemplate
 } from 'lucide-react';
 import { MOCK_PROJECTS, LOCALE, MOCK_TEMPLATES } from '../constants';
 import { Language } from '../types';
-import { createProject, getProjectMembers, updateProject, copyProject } from '../services/mockService';
+import { createProject, getProjectMembers, updateProject, copyProject, createTemplate } from '../services/mockService';
 
 interface ProjectListProps {
   lang: Language;
@@ -48,6 +52,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [projects, setProjects] = useState(MOCK_PROJECTS);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Wizard State (Create)
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -81,6 +86,21 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
     project: null
   });
   const [isCopying, setIsCopying] = useState(false);
+
+  // Key Dialog State
+  const [keyDialog, setKeyDialog] = useState<{isOpen: boolean, project: any | null, key: string}>({
+    isOpen: false, 
+    project: null,
+    key: ''
+  });
+  const [isKeyCopied, setIsKeyCopied] = useState(false);
+
+  // Publish Template Dialog State
+  const [publishDialog, setPublishDialog] = useState<{isOpen: boolean, project: any | null}>({
+    isOpen: false, 
+    project: null
+  });
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Delete Wizard State
   const [deleteWizardOpen, setDeleteWizardOpen] = useState(false);
@@ -190,12 +210,111 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
     }
   };
 
+  const handleViewKey = (project: any) => {
+      // Mock key generation based on project ID
+      const mockKey = `nk_live_${project.id}_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
+      setKeyDialog({
+          isOpen: true,
+          project: project,
+          key: mockKey
+      });
+      setIsKeyCopied(false);
+  };
+
+  const copyToClipboard = () => {
+      navigator.clipboard.writeText(keyDialog.key);
+      setIsKeyCopied(true);
+      setTimeout(() => setIsKeyCopied(false), 2000);
+  };
+
+  const handlePublishClick = (project: any) => {
+      setPublishDialog({ isOpen: true, project });
+  };
+
+  const executePublish = async () => {
+      if (!publishDialog.project) return;
+      setIsPublishing(true);
+      try {
+          // Map project to template structure
+          await createTemplate({
+              name: publishDialog.project.name,
+              desc: publishDialog.project.desc,
+              category: 'catGeneral', // Default category
+              tags: ['Project', 'Custom'],
+              type: 'custom'
+          });
+          alert(t.publishSuccess);
+          setPublishDialog({ isOpen: false, project: null });
+      } catch (err) {
+          console.error(err);
+          alert('Failed to publish template');
+      } finally {
+          setIsPublishing(false);
+      }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'In Progress': return 'bg-nebula-100 text-nebula-700 dark:bg-nebula-900/30 dark:text-nebula-400';
       case 'Closed': return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  // --- Import / Export Handlers ---
+  const handleExport = (project: any) => {
+    const dataStr = JSON.stringify(project, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const date = new Date().toISOString().split('T')[0];
+    const safeName = (project.number || project.name || 'project').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `nebula-${safeName}-${date}.json`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        // Handle both single object and array import
+        const itemsToImport = Array.isArray(json) ? json : [json];
+        
+        const validProjects = itemsToImport.filter(p => p.name);
+        
+        if (validProjects.length > 0) {
+             // Regenerate IDs to avoid conflicts and prepend
+             const importedProjects = validProjects.map((p, index) => ({
+                 ...p,
+                 id: Date.now() + index + Math.floor(Math.random() * 1000),
+                 name: `${p.name} (Imported)`
+             }));
+             setProjects([...importedProjects, ...projects]);
+             alert(`Successfully imported ${importedProjects.length} project(s).`);
+        } else {
+             alert('Invalid file format: No valid project data found.');
+        }
+      } catch (err) {
+        console.error('Import failed', err);
+        alert('Failed to parse JSON file.');
+      }
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
   };
 
   // --- Create Wizard Functions ---
@@ -953,6 +1072,24 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
 
         {/* Actions & View Toggle */}
         <div className="flex items-center gap-3 w-full md:w-auto">
+           {/* Import Button */}
+           <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg mr-2">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept=".json"
+                onChange={handleFileChange}
+              />
+              <button 
+                onClick={handleImportClick}
+                className="p-2 rounded-md transition-all text-gray-500 dark:text-gray-400 hover:text-nebula-600 dark:hover:text-nebula-400 hover:bg-white dark:hover:bg-gray-600"
+                title={t.importProject}
+              >
+                <Upload size={18} />
+              </button>
+           </div>
+
            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
               <button 
                 onClick={() => setViewMode('grid')}
@@ -1022,6 +1159,24 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-2"
                                >
                                  <Copy size={14} /> {t.copy}
+                               </button>
+                               <button 
+                                 onClick={() => handleViewKey(project)}
+                                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                               >
+                                 <Key size={14} /> {t.viewKey}
+                               </button>
+                               <button 
+                                 onClick={() => handlePublishClick(project)}
+                                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                               >
+                                 <LayoutTemplate size={14} /> {t.publishTemplate}
+                               </button>
+                               <button 
+                                 onClick={() => handleExport(project)}
+                                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                               >
+                                 <Download size={14} /> {t.exportProject}
                                </button>
                                <button 
                                  onClick={() => handleDeleteClick(project)}
@@ -1136,6 +1291,27 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                                 <Copy size={14} />
                              </button>
                              <button 
+                               onClick={() => handleViewKey(project)}
+                               className="p-1.5 text-gray-400 hover:text-nebula-600 dark:hover:text-nebula-400 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors" 
+                               title={t.viewKey}
+                             >
+                                <Key size={14} />
+                             </button>
+                             <button 
+                               onClick={() => handlePublishClick(project)}
+                               className="p-1.5 text-gray-400 hover:text-nebula-600 dark:hover:text-nebula-400 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors" 
+                               title={t.publishTemplate}
+                             >
+                                <LayoutTemplate size={14} />
+                             </button>
+                             <button 
+                               onClick={() => handleExport(project)}
+                               className="p-1.5 text-gray-400 hover:text-nebula-600 dark:hover:text-nebula-400 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors" 
+                               title={t.exportProject}
+                             >
+                                <Download size={14} />
+                             </button>
+                             <button 
                                onClick={() => handleDeleteClick(project)}
                                className="p-1.5 text-gray-400 hover:text-red-600 bg-gray-100 dark:bg-gray-700 rounded-md transition-colors" 
                                title={t.delete}
@@ -1154,22 +1330,19 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       {/* Project Creation Wizard Modal */}
       {isWizardOpen && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4">
+           {/* ... Wizard Content ... */}
+           {/* Reusing existing wizard UI as is, just wrapped */}
            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
              
-             {/* Header - Purple to Blue Gradient */}
              <div className="bg-gradient-to-r from-purple-600 to-nebula-600 p-8 text-white relative flex-shrink-0">
                 <h2 className="text-2xl font-bold mb-2">{t.createProjectTitle}</h2>
                 <p className="opacity-80 text-sm">{t.createProjectSubtitle}</p>
              </div>
 
-             {/* Stepper Container */}
              <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 relative">
                <div className="max-w-4xl mx-auto px-6 py-6">
                  <div className="flex items-center justify-between relative">
-                   {/* Background Connection Line */}
                    <div className="absolute left-0 top-4 w-full h-0.5 bg-gray-200 dark:bg-gray-700 -z-0"></div>
-                   
-                   {/* Dynamic Progress Line (Connects completed circles) */}
                    <div 
                      className="absolute left-0 top-4 h-0.5 bg-nebula-600 dark:bg-nebula-400 transition-all duration-300 -z-0"
                      style={{ width: `${((wizardStep - 1) / 3) * 100}%` }}
@@ -1178,7 +1351,6 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                    {[1, 2, 3, 4].map(step => {
                      const isCompleted = step < wizardStep;
                      const isCurrent = step === wizardStep;
-                     
                      return (
                         <div 
                            key={step} 
@@ -1186,24 +1358,12 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                            className={`relative z-10 flex flex-col items-center gap-2 group ${step < wizardStep && !isCreating ? 'cursor-pointer' : 'cursor-default'}`}
                         >
                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all border-2 
-                             ${isCompleted 
-                                ? 'bg-nebula-600 border-nebula-600 text-white' 
-                                : isCurrent 
-                                  ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-500/30 scale-110' 
-                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
-                             }
+                             ${isCompleted ? 'bg-nebula-600 border-nebula-600 text-white' : isCurrent ? 'bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-500/30 scale-110' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'}
                              ${isCompleted && !isCreating ? 'group-hover:bg-nebula-700' : ''}
                            `}>
                              {isCompleted ? <Check size={16} /> : step}
                            </div>
-                           <span className={`text-xs font-medium transition-colors 
-                             ${isCompleted 
-                               ? 'text-nebula-600 dark:text-nebula-400' 
-                               : isCurrent 
-                                 ? 'text-purple-600 dark:text-purple-400 font-bold' 
-                                 : 'text-gray-400'
-                             }
-                           `}>
+                           <span className={`text-xs font-medium transition-colors ${isCompleted ? 'text-nebula-600 dark:text-nebula-400' : isCurrent ? 'text-purple-600 dark:text-purple-400 font-bold' : 'text-gray-400'}`}>
                              {t[`step${step}` as keyof typeof t]}
                            </span>
                         </div>
@@ -1211,86 +1371,40 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
                    })}
                  </div>
                </div>
-               
-               {/* Bottom Progress Bar */}
                <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-200 dark:bg-gray-700">
-                  <div 
-                    className="h-full bg-gradient-to-r from-nebula-500 to-purple-600 transition-all duration-500 ease-out"
-                    style={{ width: `${(wizardStep / 4) * 100}%` }}
-                  ></div>
+                  <div className="h-full bg-gradient-to-r from-nebula-500 to-purple-600 transition-all duration-500 ease-out" style={{ width: `${(wizardStep / 4) * 100}%` }}></div>
                </div>
              </div>
 
-             {/* Content Body */}
-             <div 
-               className="p-8 overflow-y-auto bg-white dark:bg-gray-900 [&::-webkit-scrollbar]:hidden"
-               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-             >
+             <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="max-w-4xl mx-auto">
                    {renderWizardContent()}
                 </div>
              </div>
 
-             {/* Footer Buttons */}
              <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex justify-between items-center flex-shrink-0">
-                {/* Left Side: Previous */}
                 <div>
                   {wizardStep > 1 && (
-                    <button 
-                      onClick={() => setWizardStep(prev => prev - 1)}
-                      disabled={isCreating}
-                      className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ArrowLeft size={16} />
-                      {t.prev}
+                    <button onClick={() => setWizardStep(prev => prev - 1)} disabled={isCreating} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                      <ArrowLeft size={16} /> {t.prev}
                     </button>
                   )}
                 </div>
-
-                {/* Right Side: Cancel & Next */}
                 <div className="flex gap-4">
-                  <button 
-                    onClick={closeWizard}
-                    disabled={isCreating}
-                    className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  <button onClick={closeWizard} disabled={isCreating} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                     {t.cancel}
                   </button>
-
                   {wizardStep < 4 ? (
-                    <button 
-                      onClick={() => setWizardStep(prev => prev + 1)}
-                      className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={
-                        (wizardStep === 1 && (!wizardData.name || !wizardData.projectNumber)) ||
-                        (wizardStep === 3 && (!wizardData.dbHost || !wizardData.dbPort || !wizardData.dbName || !wizardData.dbUser || !wizardData.dbPassword))
-                      }
-                    >
-                      {t.next}
-                      <ChevronRight size={16} />
+                    <button onClick={() => setWizardStep(prev => prev + 1)} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled={(wizardStep === 1 && (!wizardData.name || !wizardData.projectNumber)) || (wizardStep === 3 && (!wizardData.dbHost || !wizardData.dbPort || !wizardData.dbName || !wizardData.dbUser || !wizardData.dbPassword))}>
+                      {t.next} <ChevronRight size={16} />
                     </button>
                   ) : (
-                    <button 
-                      onClick={handleCreateProject}
-                      disabled={isCreating}
-                      className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {isCreating ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} />
-                          {t.loading}
-                        </>
-                      ) : (
-                        <>
-                          <Rocket size={18} />
-                          {t.create}
-                        </>
-                      )}
+                    <button onClick={handleCreateProject} disabled={isCreating} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                      {isCreating ? <><Loader2 className="animate-spin" size={18} /> {t.loading}</> : <><Rocket size={18} /> {t.create}</>}
                     </button>
                   )}
                 </div>
              </div>
-
            </div>
          </div>
       )}
@@ -1298,98 +1412,46 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       {/* Delete Project Wizard Modal */}
       {deleteWizardOpen && projectToDelete && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4">
+           {/* ... Delete Wizard Content (Reusing existing logic) ... */}
            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
-             
-             {/* Red Header */}
              <div className="bg-red-500 p-8 text-white relative flex-shrink-0">
                 <h2 className="text-2xl font-bold mb-2">{t.deleteProjectTitle}</h2>
                 <p className="opacity-90 text-sm">{t.deleteProjectSubtitle}</p>
              </div>
-
-             {/* Stepper */}
              <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 relative py-6">
                 <div className="max-w-3xl mx-auto px-6 relative">
-                    {/* Progress Line Background */}
                     <div className="absolute top-4 left-6 right-6 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                    
-                    {/* Active Progress Line */}
-                    <div 
-                      className="absolute top-4 left-6 h-0.5 bg-red-500 transition-all duration-300"
-                      style={{ width: `calc(${((deleteStep - 1) / 3) * 100}% - 48px)` }}
-                    ></div>
-
+                    <div className="absolute top-4 left-6 h-0.5 bg-red-500 transition-all duration-300" style={{ width: `calc(${((deleteStep - 1) / 3) * 100}% - 48px)` }}></div>
                     <div className="flex justify-between relative">
                        {[1, 2, 3, 4].map(step => (
                            <div key={step} className="flex flex-col items-center gap-2 z-10">
-                               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all border-2 
-                                 ${step <= deleteStep 
-                                   ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30' 
-                                   : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
-                                 }`}>
+                               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all border-2 ${step <= deleteStep ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'}`}>
                                   {step < deleteStep ? <Check size={16} /> : step}
                                </div>
-                               <span className={`text-xs font-medium ${step <= deleteStep ? 'text-red-500' : 'text-gray-400'}`}>
-                                  {t[`delStep${step}` as keyof typeof t]}
-                               </span>
+                               <span className={`text-xs font-medium ${step <= deleteStep ? 'text-red-500' : 'text-gray-400'}`}>{t[`delStep${step}` as keyof typeof t]}</span>
                            </div>
                        ))}
                     </div>
                 </div>
              </div>
-
-             {/* Content */}
-             <div 
-               className="p-8 overflow-y-auto bg-white dark:bg-gray-900 flex-1"
-             >
-                 <div className="max-w-3xl mx-auto">
-                    {renderDeleteWizardContent()}
-                 </div>
+             <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900 flex-1">
+                 <div className="max-w-3xl mx-auto">{renderDeleteWizardContent()}</div>
              </div>
-
-             {/* Footer Buttons */}
              {deleteStep < 4 && (
                  <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex justify-between items-center flex-shrink-0">
                     <div>
-                       {deleteStep > 1 && (
-                         <button 
-                           onClick={() => setDeleteStep(prev => prev - 1)}
-                           className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium"
-                         >
-                           <ArrowLeft size={16} />
-                           {t.prev}
-                         </button>
-                       )}
+                       {deleteStep > 1 && <button onClick={() => setDeleteStep(prev => prev - 1)} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium"><ArrowLeft size={16} /> {t.prev}</button>}
                     </div>
                     <div className="flex gap-4">
-                       <button 
-                         onClick={() => setDeleteWizardOpen(false)}
-                         className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
-                       >
-                         {t.cancel}
-                       </button>
-
+                       <button onClick={() => setDeleteWizardOpen(false)} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium">{t.cancel}</button>
                        {deleteStep < 3 ? (
-                          <button 
-                            onClick={() => setDeleteStep(prev => prev + 1)}
-                            className="px-8 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30 font-medium flex items-center gap-2"
-                          >
-                             {t.next}
-                             <ChevronRight size={16} />
-                          </button>
+                          <button onClick={() => setDeleteStep(prev => prev + 1)} className="px-8 py-2.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30 font-medium flex items-center gap-2">{t.next} <ChevronRight size={16} /></button>
                        ) : (
-                          <button 
-                            onClick={executeDelete}
-                            disabled={deleteConfirmName !== projectToDelete.name || !deleteFinalCheckbox}
-                            className="px-8 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                             <Trash2 size={16} />
-                             {t.delete}
-                          </button>
+                          <button onClick={executeDelete} disabled={deleteConfirmName !== projectToDelete.name || !deleteFinalCheckbox} className="px-8 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><Trash2 size={16} /> {t.delete}</button>
                        )}
                     </div>
                  </div>
              )}
-
            </div>
          </div>
       )}
@@ -1397,153 +1459,34 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
       {/* Edit Project Modal */}
       {isEditModalOpen && editingProject && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4">
+           {/* ... Edit Modal Content (Reusing existing logic) ... */}
            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
-             
-             {/* Header */}
              <div className="bg-gradient-to-r from-purple-600 to-nebula-600 p-6 text-white relative flex-shrink-0 flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-bold mb-1">{t.editProjectTitle}</h2>
-                    <p className="opacity-80 text-sm">{t.editProjectSubtitle}</p>
-                </div>
-                <button 
-                  onClick={closeEditModal}
-                  className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
-                >
-                    <X size={20} />
-                </button>
+                <div><h2 className="text-xl font-bold mb-1">{t.editProjectTitle}</h2><p className="opacity-80 text-sm">{t.editProjectSubtitle}</p></div>
+                <button onClick={closeEditModal} className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"><X size={20} /></button>
              </div>
-
-             {/* Content Body */}
              <div className="p-8 overflow-y-auto bg-white dark:bg-gray-900">
                 <div className="space-y-6">
-                    {/* Basic Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                           {t.projectName} <span className="text-red-500">*</span>
-                         </label>
-                         <input 
-                           type="text" 
-                           value={editingProject.name}
-                           onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
-                           className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white"
-                         />
-                      </div>
-                      <div>
-                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                           {t.projectNumber} <span className="text-red-500">*</span>
-                         </label>
-                         <input 
-                           type="text" 
-                           value={editingProject.number || ''}
-                           onChange={(e) => setEditingProject({...editingProject, number: e.target.value})}
-                           className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white"
-                         />
-                      </div>
+                      <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.projectName} <span className="text-red-500">*</span></label><input type="text" value={editingProject.name} onChange={(e) => setEditingProject({...editingProject, name: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white" /></div>
+                      <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.projectNumber} <span className="text-red-500">*</span></label><input type="text" value={editingProject.number || ''} onChange={(e) => setEditingProject({...editingProject, number: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white" /></div>
                     </div>
-
+                    <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.projectDesc}</label><textarea value={editingProject.desc} onChange={(e) => setEditingProject({...editingProject, desc: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white h-24 resize-none" /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.status}</label><div className="relative"><select value={editingProject.status} onChange={(e) => setEditingProject({...editingProject, status: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white appearance-none"><option value="In Progress">In Progress</option><option value="Closed">Closed</option></select><ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} /></div></div>
                     <div>
-                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.projectDesc}</label>
-                       <textarea 
-                         value={editingProject.desc}
-                         onChange={(e) => setEditingProject({...editingProject, desc: e.target.value})}
-                         className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white h-24 resize-none"
-                       />
-                    </div>
-                    
-                    {/* Status */}
-                    <div>
-                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.status}</label>
-                       <div className="relative">
-                          <select 
-                             value={editingProject.status}
-                             onChange={(e) => setEditingProject({...editingProject, status: e.target.value})}
-                             className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors text-gray-800 dark:text-white appearance-none"
-                          >
-                             <option value="In Progress">In Progress</option>
-                             <option value="Closed">Closed</option>
-                          </select>
-                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={18} />
-                       </div>
-                    </div>
-
-                    {/* Members Selection */}
-                    <div>
-                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-between">
-                          <span>{t.projectMembers}</span>
-                          <span className="text-xs font-normal text-nebula-600 dark:text-nebula-400 cursor-pointer hover:underline">{t.manageMembers}</span>
-                       </label>
-                       
+                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-between"><span>{t.projectMembers}</span><span className="text-xs font-normal text-nebula-600 dark:text-nebula-400 cursor-pointer hover:underline">{t.manageMembers}</span></label>
                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 p-4 max-h-[200px] overflow-y-auto">
-                          {loadingMembers ? (
-                             <div className="flex items-center justify-center py-8 text-gray-500">
-                                <Loader2 className="animate-spin mr-2" size={16} />
-                                {t.loadingMembers}
-                             </div>
-                          ) : (
-                             <div className="space-y-2">
-                                {availableMembers.map(member => (
-                                   <div 
-                                      key={member.id}
-                                      onClick={() => toggleMemberSelection(member.id)}
-                                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border transition-all ${
-                                         selectedMemberIds.includes(member.id)
-                                           ? 'bg-nebula-50 dark:bg-nebula-900/20 border-nebula-200 dark:border-nebula-800'
-                                           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                                      }`}
-                                   >
-                                      <div className="flex items-center gap-3">
-                                         <img src={member.avatar} alt={member.name} className="w-8 h-8 rounded-full bg-gray-200" />
-                                         <div>
-                                            <p className="text-sm font-bold text-gray-800 dark:text-white">{member.name}</p>
-                                            <p className="text-xs text-gray-500">{member.role}</p>
-                                         </div>
-                                      </div>
-                                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                                         selectedMemberIds.includes(member.id)
-                                           ? 'bg-nebula-600 border-nebula-600 text-white'
-                                           : 'border-gray-300 dark:border-gray-600'
-                                      }`}>
-                                         {selectedMemberIds.includes(member.id) && <Check size={12} />}
-                                      </div>
-                                   </div>
-                                ))}
-                             </div>
+                          {loadingMembers ? <div className="flex items-center justify-center py-8 text-gray-500"><Loader2 className="animate-spin mr-2" size={16} />{t.loadingMembers}</div> : (
+                             <div className="space-y-2">{availableMembers.map(member => (<div key={member.id} onClick={() => toggleMemberSelection(member.id)} className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border transition-all ${selectedMemberIds.includes(member.id) ? 'bg-nebula-50 dark:bg-nebula-900/20 border-nebula-200 dark:border-nebula-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}><div className="flex items-center gap-3"><img src={member.avatar} alt={member.name} className="w-8 h-8 rounded-full bg-gray-200" /><div><p className="text-sm font-bold text-gray-800 dark:text-white">{member.name}</p><p className="text-xs text-gray-500">{member.role}</p></div></div><div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedMemberIds.includes(member.id) ? 'bg-nebula-600 border-nebula-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>{selectedMemberIds.includes(member.id) && <Check size={12} />}</div></div>))}</div>
                           )}
                        </div>
                     </div>
                 </div>
              </div>
-
-             {/* Footer Buttons */}
              <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex justify-end gap-4 flex-shrink-0">
-                  <button 
-                    onClick={closeEditModal}
-                    disabled={isSaving}
-                    className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
-                  >
-                    {t.cancel}
-                  </button>
-
-                  <button 
-                    onClick={handleUpdateProject}
-                    disabled={isSaving}
-                    className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="animate-spin" size={18} />
-                        {t.saving}
-                      </>
-                    ) : (
-                      <>
-                        <Save size={18} />
-                        {t.saveChanges}
-                      </>
-                    )}
-                  </button>
+                  <button onClick={closeEditModal} disabled={isSaving} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">{t.cancel}</button>
+                  <button onClick={handleUpdateProject} disabled={isSaving} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">{isSaving ? <><Loader2 className="animate-spin" size={18} />{t.saving}</> : <><Save size={18} />{t.saveChanges}</>}</button>
              </div>
-
            </div>
          </div>
       )}
@@ -1554,37 +1497,75 @@ const ProjectList: React.FC<ProjectListProps> = ({ lang }) => {
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
              <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
-                   <div className="w-12 h-12 rounded-full bg-nebula-100 dark:bg-nebula-900/30 flex items-center justify-center text-nebula-600 dark:text-nebula-400">
-                      <Copy size={24} />
+                   <div className="w-12 h-12 rounded-full bg-nebula-100 dark:bg-nebula-900/30 flex items-center justify-center text-nebula-600 dark:text-nebula-400"><Copy size={24} /></div>
+                   <div><h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.createProjectTitle.replace('Create New', 'Copy')}</h3></div>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-2">{t.copyConfirm}</p>
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700"><span className="font-medium text-gray-800 dark:text-white">{copyDialog.project.name}</span></div>
+             </div>
+             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+                <button onClick={() => setCopyDialog({isOpen: false, project: null})} disabled={isCopying} className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors">{t.cancel}</button>
+                <button onClick={executeCopy} disabled={isCopying} className="px-4 py-2 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 font-medium transition-colors flex items-center gap-2 shadow-lg shadow-nebula-600/20">{isCopying ? <Loader2 className="animate-spin" size={16} /> : <Copy size={16} />}{t.copy}</button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Template Confirmation Modal */}
+      {publishDialog.isOpen && publishDialog.project && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+             <div className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                   <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400"><LayoutTemplate size={24} /></div>
+                   <div><h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.confirmPublish}</h3></div>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-2">{t.publishTemplateConfirm}</p>
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700"><span className="font-medium text-gray-800 dark:text-white">{publishDialog.project.name}</span></div>
+             </div>
+             <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+                <button onClick={() => setPublishDialog({isOpen: false, project: null})} disabled={isPublishing} className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors">{t.cancel}</button>
+                <button onClick={executePublish} disabled={isPublishing} className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-medium transition-colors flex items-center gap-2 shadow-lg shadow-emerald-600/20">{isPublishing ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}{t.confirmPublish}</button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Key Dialog */}
+      {keyDialog.isOpen && keyDialog.project && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+             <div className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                   <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <Key size={24} />
                    </div>
                    <div>
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.createProjectTitle.replace('Create New', 'Copy')}</h3>
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">{t.projectKey}</h3>
+                      <p className="text-sm text-gray-500">{keyDialog.project.name}</p>
                    </div>
                 </div>
                 
-                <p className="text-gray-600 dark:text-gray-300 mb-2">
-                  {t.copyConfirm}
-                </p>
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                   <span className="font-medium text-gray-800 dark:text-white">{copyDialog.project.name}</span>
+                <div className="relative">
+                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 font-mono text-sm text-gray-700 dark:text-gray-300 break-all pr-12">
+                      {keyDialog.key}
+                   </div>
+                   <button 
+                     onClick={copyToClipboard}
+                     className="absolute top-2 right-2 p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md text-gray-500 transition-colors"
+                     title={t.copyKey}
+                   >
+                      {isKeyCopied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                   </button>
                 </div>
              </div>
 
              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
                 <button 
-                  onClick={() => setCopyDialog({isOpen: false, project: null})}
-                  disabled={isCopying}
-                  className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium transition-colors"
+                  onClick={() => setKeyDialog({isOpen: false, project: null, key: ''})}
+                  className="px-6 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
                 >
-                  {t.cancel}
-                </button>
-                <button 
-                  onClick={executeCopy}
-                  disabled={isCopying}
-                  className="px-4 py-2 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 font-medium transition-colors flex items-center gap-2 shadow-lg shadow-nebula-600/20"
-                >
-                  {isCopying ? <Loader2 className="animate-spin" size={16} /> : <Copy size={16} />}
-                  {t.copy}
+                  {t.close}
                 </button>
              </div>
           </div>

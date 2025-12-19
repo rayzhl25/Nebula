@@ -1,5 +1,5 @@
 import { User } from '../types';
-import { MOCK_DEPARTMENTS, MOCK_DEVELOPERS, MOCK_ROLES, MOCK_PERMISSIONS } from '../constants';
+import { MOCK_DEPARTMENTS, MOCK_DEVELOPERS, MOCK_ROLES, MOCK_PERMISSIONS, MOCK_TEMPLATE_LIST, MOCK_ORGANIZATIONS, MOCK_RESOURCES } from '../constants';
 
 export const login = async (username: string): Promise<User> => {
   return new Promise((resolve) => {
@@ -53,6 +53,43 @@ export const updateProject = async (id: number, data: any): Promise<boolean> => 
 
 export const copyProject = async (id: number): Promise<boolean> => {
   console.log(`Calling Backend API [POST /api/projects/${id}/copy]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 800);
+  });
+};
+
+// --- Organization Service ---
+
+export const getOrganizations = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_ORGANIZATIONS]);
+    }, 600);
+  });
+};
+
+export const createOrganization = async (data: any): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/organizations] with data:", data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const updateOrganization = async (id: string, data: any): Promise<boolean> => {
+  console.log(`Calling Backend API [PUT /api/organizations/${id}] with data:`, data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const deleteOrganization = async (id: string): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/organizations/${id}]`);
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);
@@ -172,6 +209,80 @@ export const updateRole = async (id: string, data: any): Promise<boolean> => {
 
 export const deleteRole = async (id: string): Promise<boolean> => {
   console.log(`Calling Backend API [DELETE /api/roles/${id}]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 800);
+  });
+};
+
+// --- Template Service ---
+
+export const getTemplates = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_TEMPLATE_LIST]);
+    }, 600);
+  });
+};
+
+export const createTemplate = async (data: any): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/templates] with data:", data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const updateTemplate = async (id: string, data: any): Promise<boolean> => {
+  console.log(`Calling Backend API [PUT /api/templates/${id}] with data:`, data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const deleteTemplate = async (id: string): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/templates/${id}]`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 800);
+  });
+};
+
+// --- Development Resources Service ---
+
+export const getResources = async (): Promise<any[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...MOCK_RESOURCES]);
+    }, 600);
+  });
+};
+
+export const createResource = async (data: any): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/resources] with data:", data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const updateResource = async (id: string, data: any): Promise<boolean> => {
+  console.log(`Calling Backend API [PUT /api/resources/${id}] with data:`, data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 1000);
+  });
+};
+
+export const deleteResource = async (id: string): Promise<boolean> => {
+  console.log(`Calling Backend API [DELETE /api/resources/${id}]`);
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);

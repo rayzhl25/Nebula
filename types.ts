@@ -1,3 +1,4 @@
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type Language = 'zh' | 'en';
 
@@ -69,4 +70,28 @@ export interface Role {
   status: 'Active' | 'Inactive';
   permissionIds: string[];
   userCount: number;
+}
+
+export type ResourceType = 
+  | 'page_template' 
+  | 'biz_component' 
+  | 'vue_component' 
+  | 'pro_component' 
+  | 'function'
+  | 'script' 
+  | 'service' 
+  | 'api' 
+  | 'sql';
+
+export interface Resource {
+  id: string;
+  name: string;
+  code: string;
+  type: ResourceType;
+  group: string; // Grouping category
+  appType?: 'Web' | 'App' | 'Backend'; // New field
+  previewUrl?: string; // Optional for frontend items
+  description: string;
+  author: string;
+  updatedAt: string;
 }
