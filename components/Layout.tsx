@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Menu, 
@@ -7,10 +8,13 @@ import {
   LogOut, 
   ChevronDown, 
   ChevronRight,
-  Monitor
+  Monitor,
+  Lock,
+  Info
 } from 'lucide-react';
 import { MENUS, LOCALE, MOCK_TENANTS } from '../constants';
 import { ThemeMode, Language, Tenant, User, MenuItem } from '../types';
+import { ChangePasswordModal, AboutModal } from './project/ActionModals';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,6 +35,11 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['resources']);
+  
+  // Modal states
+  const [isPwdModalOpen, setIsPwdModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  
   const t = LOCALE[lang];
 
   const toggleMenuExpand = (id: string) => {
@@ -142,14 +151,40 @@ const Layout: React.FC<LayoutProps> = ({
                <button onClick={() => setTheme('dark')} className={`p-1.5 rounded-full ${theme === 'dark' ? 'bg-white shadow text-purple-400' : 'text-gray-500'}`}><Moon size={14} /></button>
             </div>
 
-            {/* User Profile */}
+            {/* User Profile & Logout - Modified */}
             <div className="flex items-center gap-3 border-l border-gray-300 dark:border-gray-600 pl-4 ml-2">
-              <img src={user.avatar} alt="User" className="w-8 h-8 rounded-full border border-gray-200" />
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-gray-800 dark:text-white">{user.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">{user.role}</p>
+              {/* User Dropdown Trigger */}
+              <div className="relative group/user">
+                  <div className="flex items-center gap-3 cursor-pointer p-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <img src={user.avatar} alt="User" className="w-8 h-8 rounded-full border border-gray-200" />
+                    <div className="hidden md:block text-right">
+                      <p className="text-sm font-medium text-gray-800 dark:text-white">{user.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">{user.role}</p>
+                    </div>
+                    <ChevronDown size={14} className="text-gray-400" />
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover/user:block z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-1">
+                          <button 
+                            onClick={() => setIsPwdModalOpen(true)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md flex items-center gap-2"
+                          >
+                            <Lock size={14} /> {t.changePassword}
+                          </button>
+                          <button 
+                            onClick={() => setIsAboutModalOpen(true)}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md flex items-center gap-2"
+                          >
+                            <Info size={14} /> {t.aboutUs}
+                          </button>
+                      </div>
+                  </div>
               </div>
-              <button onClick={onLogout} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
+
+              {/* Standalone Logout Button (Kept in position as requested) */}
+              <button onClick={onLogout} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full" title={t.logout}>
                 <LogOut size={18} />
               </button>
             </div>
@@ -160,6 +195,18 @@ const Layout: React.FC<LayoutProps> = ({
           {children}
         </main>
       </div>
+
+      {/* Global Modals */}
+      <ChangePasswordModal 
+        isOpen={isPwdModalOpen}
+        onClose={() => setIsPwdModalOpen(false)}
+        lang={lang}
+      />
+      <AboutModal 
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
+        lang={lang}
+      />
     </div>
   );
 };

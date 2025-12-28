@@ -1,4 +1,5 @@
-import { User } from '../types';
+
+import { User, SystemInfo } from '../types';
 import { MOCK_DEPARTMENTS, MOCK_DEVELOPERS, MOCK_ROLES, MOCK_PERMISSIONS, MOCK_TEMPLATE_LIST, MOCK_ORGANIZATIONS, MOCK_RESOURCES } from '../constants';
 
 export const login = async (username: string): Promise<User> => {
@@ -11,6 +12,35 @@ export const login = async (username: string): Promise<User> => {
         role: 'admin'
       });
     }, 800);
+  });
+};
+
+export const changePassword = async (oldPass: string, newPass: string): Promise<boolean> => {
+  console.log("Calling Backend API [POST /api/user/change-password]");
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // Simple mock: if old password is '123456', success
+      if (oldPass === '123456') {
+        resolve(true);
+      } else {
+        reject(new Error('INVALID_PASSWORD'));
+      }
+    }, 1200);
+  });
+};
+
+export const getSystemInfo = async (): Promise<SystemInfo> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        productName: '星云',
+        version: '6.8.0.202406',
+        edition: '标准版',
+        serviceValidUntil: '2099-12-30',
+        licenseValidUntil: '2099-12-30',
+        copyright: '©2021-2024 上海云座信息科技有限公司版权所有'
+      });
+    }, 500);
   });
 };
 

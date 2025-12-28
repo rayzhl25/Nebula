@@ -95,3 +95,12 @@ export interface Resource {
   author: string;
   updatedAt: string;
 }
+
+export interface SystemInfo {
+  productName: string;
+  version: string;
+  edition: string;
+  serviceValidUntil: string;
+  licenseValidUntil: string;
+  copyright: string;
+}

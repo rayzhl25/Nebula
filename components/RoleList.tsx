@@ -361,7 +361,7 @@ const RoleList: React.FC<RoleListProps> = ({ lang }) => {
                                 <Shield size={16} className="text-nebula-500"/> {module}
                              </h4>
                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {perms.map(perm => (
+                                {(perms as Permission[]).map(perm => (
                                    <label key={perm.id} className="flex items-center gap-2 cursor-pointer group select-none">
                                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
                                          (formData.permissionIds || []).includes(perm.id)
