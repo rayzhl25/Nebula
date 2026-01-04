@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Check, 
@@ -8,7 +9,8 @@ import {
   Server, 
   HardDrive, 
   PlayCircle,
-  Loader2
+  Loader2,
+  Cloud
 } from 'lucide-react';
 import { LOCALE, MOCK_TEMPLATES } from '../../constants';
 import { Language } from '../../types';
@@ -49,6 +51,7 @@ const CreateWizard: React.FC<CreateWizardProps> = ({ isOpen, onClose, onSuccess,
 
   // 数据库类型配置
   const dbTypes = [
+    { id: 'nebula', label: '星云', icon: Cloud, defaultPort: '' },
     { id: 'mysql', label: 'MySQL', icon: Database, defaultPort: '3306' },
     { id: 'postgresql', label: 'PostgreSQL', icon: Server, defaultPort: '5432' },
     { id: 'oracle', label: 'Oracle', icon: PlayCircle, defaultPort: '1521' },
@@ -139,13 +142,14 @@ const CreateWizard: React.FC<CreateWizardProps> = ({ isOpen, onClose, onSuccess,
           </div>
         );
       case 3: // 步骤 3: 数据库配置
+        const isNebula = data.dbType === 'nebula';
         return (
           <div className="space-y-8 animate-fade-in px-2 py-4">
              <div className="mb-4">
                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{t.dbConfigTitle}</h3>
                <p className="text-gray-500 dark:text-gray-400 text-sm">{t.dbConfigDesc}</p>
              </div>
-             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                {dbTypes.map((type) => (
                  <div key={type.id} onClick={() => handleDbTypeSelect(type.id, type.defaultPort)} className={`cursor-pointer rounded-xl border-2 p-2 flex flex-col items-center justify-center gap-2 transition-all h-24 ${data.dbType === type.id ? 'border-nebula-500 bg-nebula-50 dark:bg-nebula-900/20 text-nebula-700 dark:text-nebula-300' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-nebula-300'}`}>
                    <type.icon size={24} className={data.dbType === type.id ? 'text-nebula-600' : 'text-gray-400'} />
@@ -154,11 +158,59 @@ const CreateWizard: React.FC<CreateWizardProps> = ({ isOpen, onClose, onSuccess,
                ))}
              </div>
              <div className="space-y-4">
-               <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbHost}</label><input type="text" value={data.dbHost} onChange={(e) => setData({...data, dbHost: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none text-gray-800 dark:text-white"/></div>
-               <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbPort}</label><input type="text" value={data.dbPort} onChange={(e) => setData({...data, dbPort: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none text-gray-800 dark:text-white"/></div>
-               <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbName}</label><input type="text" value={data.dbName} onChange={(e) => setData({...data, dbName: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none text-gray-800 dark:text-white" placeholder={t.dbNamePlaceholder}/></div>
-               <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbUser}</label><input type="text" value={data.dbUser} onChange={(e) => setData({...data, dbUser: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none text-gray-800 dark:text-white" placeholder={t.dbUserPlaceholder}/></div>
-               <div><label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbPassword}</label><input type="password" value={data.dbPassword} onChange={(e) => setData({...data, dbPassword: e.target.value})} className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-nebula-500 outline-none text-gray-800 dark:text-white" placeholder={t.dbPasswordPlaceholder}/></div>
+               <div>
+                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbHost}</label>
+                 <input 
+                   type="text" 
+                   value={data.dbHost} 
+                   onChange={(e) => setData({...data, dbHost: e.target.value})} 
+                   disabled={isNebula}
+                   className={`w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors ${isNebula ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbPort}</label>
+                 <input 
+                   type="text" 
+                   value={data.dbPort} 
+                   onChange={(e) => setData({...data, dbPort: e.target.value})} 
+                   disabled={isNebula}
+                   className={`w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors ${isNebula ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbName}</label>
+                 <input 
+                   type="text" 
+                   value={data.dbName} 
+                   onChange={(e) => setData({...data, dbName: e.target.value})} 
+                   disabled={isNebula}
+                   className={`w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors ${isNebula ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
+                   placeholder={isNebula ? '' : t.dbNamePlaceholder}
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbUser}</label>
+                 <input 
+                   type="text" 
+                   value={data.dbUser} 
+                   onChange={(e) => setData({...data, dbUser: e.target.value})} 
+                   disabled={isNebula}
+                   className={`w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors ${isNebula ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
+                   placeholder={isNebula ? '' : t.dbUserPlaceholder}
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">{t.dbPassword}</label>
+                 <input 
+                   type="password" 
+                   value={data.dbPassword} 
+                   onChange={(e) => setData({...data, dbPassword: e.target.value})} 
+                   disabled={isNebula}
+                   className={`w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-nebula-500 outline-none transition-colors ${isNebula ? 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white'}`}
+                   placeholder={isNebula ? '' : t.dbPasswordPlaceholder}
+                 />
+               </div>
              </div>
           </div>
         );
@@ -174,8 +226,8 @@ const CreateWizard: React.FC<CreateWizardProps> = ({ isOpen, onClose, onSuccess,
                 <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.projectName}</span><span className="font-medium text-gray-800 dark:text-white">{data.name}</span></div>
                 <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.projectNumber}</span><span className="font-medium text-gray-800 dark:text-white">{data.projectNumber}</span></div>
                 <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.selectTemplate}</span><span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">{selectedTpl && <selectedTpl.icon size={14} />}{selectedTpl ? t[selectedTpl.nameKey as keyof typeof t] : '-'}</span></div>
-                <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.dbType}</span><span className="font-medium text-gray-800 dark:text-white uppercase">{data.dbType}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">{t.dbHost}</span><span className="font-medium text-gray-800 dark:text-white">{data.dbHost}:{data.dbPort}</span></div>
+                <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.dbType}</span><span className="font-medium text-gray-800 dark:text-white uppercase">{data.dbType === 'nebula' ? '星云' : data.dbType}</span></div>
+                <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-3"><span className="text-gray-500 dark:text-gray-400">{t.dbHost}</span><span className="font-medium text-gray-800 dark:text-white">{data.dbType === 'nebula' ? 'Managed' : `${data.dbHost}:${data.dbPort}`}</span></div>
              </div>
           </div>
         );
@@ -224,7 +276,7 @@ const CreateWizard: React.FC<CreateWizardProps> = ({ isOpen, onClose, onSuccess,
            <div>{step > 1 && <button onClick={() => setStep(prev => prev - 1)} disabled={isCreating} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50"><ArrowLeft size={16} /> {t.prev}</button>}</div>
            <div className="flex gap-4">
              <button onClick={onClose} disabled={isCreating} className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50">{t.cancel}</button>
-             {step < 4 ? <button onClick={() => setStep(prev => prev + 1)} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-50" disabled={(step === 1 && (!data.name || !data.projectNumber)) || (step === 3 && !data.dbHost)}>{t.next} <ChevronRight size={16} /></button>
+             {step < 4 ? <button onClick={() => setStep(prev => prev + 1)} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-50" disabled={(step === 1 && (!data.name || !data.projectNumber)) || (step === 3 && data.dbType !== 'nebula' && !data.dbHost)}>{t.next} <ChevronRight size={16} /></button>
              : <button onClick={handleCreate} disabled={isCreating} className="px-8 py-2.5 rounded-lg bg-nebula-600 text-white hover:bg-nebula-700 transition-colors shadow-lg shadow-nebula-600/30 font-medium flex items-center gap-2 disabled:opacity-70">{isCreating ? <><Loader2 className="animate-spin" size={18} /> {t.loading}</> : <><Rocket size={18} /> {t.create}</>}</button>}
            </div>
         </div>
