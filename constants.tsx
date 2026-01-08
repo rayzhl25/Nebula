@@ -1157,14 +1157,18 @@ export const MOCK_TEMPLATES = [
 ];
 
 export const TRAINING_VIDEOS = [
-  { id: 'v1', title: 'Platform Quick Start', duration: '5:20', url: '#' },
-  { id: 'v2', title: 'Building Your First App', duration: '12:45', url: '#' },
-  { id: 'v3', title: 'Database & API Integration', duration: '8:30', url: '#' },
+  { id: 'v1', title: '前端页面开发', duration: '15:30', url: 'https://www.bilibili.com/video/BV1Nz42187Ng' },
+  { id: 'v2', title: '后端接口开发', duration: '12:45', url: 'https://www.bilibili.com/video/BV1Zx4y1t7M7' },
+  { id: 'v3', title: '数据库连接', duration: '08:20', url: 'https://www.bilibili.com/video/BV1Sf421B7aT' },
+  { id: 'v4', title: '项目部署', duration: '10:15', url: 'https://www.bilibili.com/video/BV1kx4y147md' },
+  { id: 'v5', title: '事件行为配置', duration: '18:50', url: 'https://www.bilibili.com/video/BV12f421B7JC' },
+  { id: 'v6', title: '后端接口调用', duration: '14:10', url: 'https://www.bilibili.com/video/BV1rz421i7Yh' },
+  { id: 'v7', title: '表格基础配置', duration: '09:40', url: 'https://www.bilibili.com/video/BV1cw4m1Y7FP' },
 ];
 
 export const HELP_LINKS = [
-  { id: 'h1', titleKey: 'productManual', url: '#' },
-  { id: 'h2', titleKey: 'productBlog', url: '#' },
+  { id: 'h1', titleKey: 'productManual', url: 'https://k6mkvxshbd.feishu.cn/docx/HP6kdNvLIo8JHpxbV0HcQd7gnpf' },
+  { id: 'h2', titleKey: 'productBlog', url: 'https://www.xingyunzuo.cn/blog/blog/' },
 ];
 
 export const DOWNLOAD_RESOURCES = [
